@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[527]:
+# In[63]:
 
 
 import pandas as pd
 import nltk
 import glob
 import sys
+import pickle
 import numpy as np
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -17,7 +18,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 
 
-# In[528]:
+# In[64]:
 
 
 #reading all the files for training using pandas and concatenating data from all the training files
@@ -25,7 +26,7 @@ all_files = ["imdb_labelled.txt","amazon_cells_labelled.txt","yelp_labelled.txt"
 dataframe = pd.concat(pd.read_csv(file, sep='\t', names = ['txt', 'label'],index_col=None, header=0) for file in all_files)
 
 
-# In[529]:
+# In[65]:
 
 
 def trainNormNB():
@@ -35,8 +36,7 @@ def trainNormNB():
     
     # Creating a normalized version of Naive Bayes Classifier
     # Normalisation of text is done here
-    stop_set = set(stopwords.words('english'))
-    norm_vectorizer = TfidfVectorizer(use_idf=True, lowercase=True, strip_accents='ascii', stop_words=stop_set)
+    norm_vectorizer = TfidfVectorizer(use_idf=True, lowercase=True, strip_accents='ascii', stop_words=set(stopwords.words('english')))
 
     y = dataframe.label    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
     x = norm_vectorizer.fit_transform(dataframe.txt)    #transforming data in the dataframe to features from text
@@ -49,10 +49,19 @@ def trainNormNB():
     norm_nbClassifier = naive_bayes.MultinomialNB()
     norm_nbClassifier.fit(x_training, y_training)
     
-    return norm_nbClassifier, norm_vectorizer
+    # save the model to disk
+    pickle.dump(norm_nbClassifier, open('norm_nbClassifier_model.sav', 'wb'))
+    with open('norm_nb_vectorizer.pk', 'wb') as fin:
+        pickle.dump(norm_vectorizer, fin)
 
 
-# In[530]:
+# In[66]:
+
+
+trainNormNB()
+
+
+# In[67]:
 
 
 def trainUnNormNB():
@@ -60,7 +69,7 @@ def trainUnNormNB():
     # This transforms text to feature vectors
 
     # Creating an unnormalized version of Naive Bayes Classifier
-    unNorm_vectorizer = TfidfVectorizer(use_idf=False, lowercase=False, strip_accents=None)
+    unNorm_vectorizer = TfidfVectorizer(use_idf=False, lowercase=False, strip_accents=None, stop_words= None)
 
     unNorm_y = dataframe.label    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
     unNorm_x = unNorm_vectorizer.fit_transform(dataframe.txt)    #transforming data in the dataframe to features from text
@@ -73,16 +82,30 @@ def trainUnNormNB():
     unNorm_nbClassifier = naive_bayes.MultinomialNB()
     unNorm_nbClassifier.fit(unNorm_x_training, unNorm_y_training)
     
-    return unNorm_nbClassifier, unNorm_vectorizer
+    # save the model to disk
+    pickle.dump(unNorm_nbClassifier, open('unNorm_nbClassifier_model.sav', 'wb'))
+    with open('unNorm_nb_vectorizer.pk', 'wb') as fin:
+        pickle.dump(unNorm_vectorizer, fin)
 
 
-# In[531]:
+# In[68]:
+
+
+trainUnNormNB()
+
+
+# In[69]:
 
 
 def testNormNB(testfile):
     df = pd.read_csv(testfile,sep='\t', names = ['txt', 'label'],index_col=None, header=-1)
     
-    norm_nbClassifier, norm_vectorizer = trainNormNB()
+    # load the model from disk
+    norm_nbClassifier = pickle.load(open('norm_nbClassifier_model.sav', 'rb'))
+    
+    # Normalisation of text is done here
+    # Loading the saved vectorizer from training
+    norm_vectorizer = pickle.load(open('norm_nb_vectorizer.pk', 'rb'))
     
     y = list(df.label)    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
     x = df.txt    #setting the independent variables of features from text
@@ -101,13 +124,19 @@ def testNormNB(testfile):
     return predict_list, precision, recall, accuracy, f1measure
 
 
-# In[532]:
+# In[70]:
 
 
 def testUnNormNB(testfile):
     df = pd.read_csv(testfile,sep='\t', names = ['txt', 'label'],index_col=None, header=-1)
     
-    unNorm_nbClassifier, unNorm_vectorizer = trainUnNormNB()
+    # load the model from disk
+    unNorm_nbClassifier = pickle.load(open('unNorm_nbClassifier_model.sav', 'rb'))
+    
+    # No Normalisation of text is done here
+    # Loading the saved vectorizer from training
+    unNorm_vectorizer = pickle.load(open('unNorm_nb_vectorizer.pk', 'rb'))
+
     
     y = list(df.label)    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
     x = df.txt    #setting the independent variables of features from text
@@ -126,7 +155,7 @@ def testUnNormNB(testfile):
     return predict_list, precision, recall, accuracy, f1measure
 
 
-# In[533]:
+# In[71]:
 
 
 def trainNormLR():
@@ -136,8 +165,7 @@ def trainNormLR():
     
     # Creating a normalized version of Logistical Regression Classifier
     # Normalisation of text is done here
-    stop_set = set(stopwords.words('english'))
-    norm_vectorizer = TfidfVectorizer(use_idf=True, lowercase=True, strip_accents='ascii', stop_words=stop_set)
+    norm_vectorizer = TfidfVectorizer(use_idf=True, lowercase=True, strip_accents='ascii', stop_words=set(stopwords.words('english')))
 
     y = dataframe.label    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
     x = norm_vectorizer.fit_transform(dataframe.txt)    #transforming data in the dataframe to features from text
@@ -150,10 +178,19 @@ def trainNormLR():
     norm_lrClassifier = LogisticRegression()
     norm_lrClassifier.fit(x_training, y_training)
     
-    return norm_lrClassifier, norm_vectorizer
+    # save the model to disk
+    pickle.dump(norm_lrClassifier, open('norm_lrClassifier_model.sav', 'wb'))
+    with open('norm_lr_vectorizer.pk', 'wb') as fin:
+        pickle.dump(norm_vectorizer, fin)
 
 
-# In[534]:
+# In[72]:
+
+
+trainNormLR()
+
+
+# In[73]:
 
 
 def trainUnNormLR():
@@ -161,7 +198,7 @@ def trainUnNormLR():
     # This transforms text to feature vectors
 
     # Creating an unnormalized version of Naive Bayes Classifier
-    unNorm_vectorizer = TfidfVectorizer(use_idf=False, lowercase=False, strip_accents=None)
+    unNorm_vectorizer = TfidfVectorizer(use_idf=False, lowercase=False, strip_accents=None, stop_words= None)
 
     unNorm_y = dataframe.label    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
     unNorm_x = unNorm_vectorizer.fit_transform(dataframe.txt)    #transforming data in the dataframe to features from text
@@ -174,16 +211,30 @@ def trainUnNormLR():
     unNorm_lrClassifier = LogisticRegression()
     unNorm_lrClassifier.fit(unNorm_x_training, unNorm_y_training)
     
-    return unNorm_lrClassifier, unNorm_vectorizer
+    # save the model to disk
+    pickle.dump(unNorm_lrClassifier, open('unNorm_lrClassifier_model.sav', 'wb'))
+    with open('unNorm_lr_vectorizer.pk', 'wb') as fin:
+        pickle.dump(unNorm_vectorizer, fin)
 
 
-# In[535]:
+# In[74]:
+
+
+trainUnNormLR()
+
+
+# In[75]:
 
 
 def testNormLR(testfile):
     df = pd.read_csv(testfile,sep='\t', names = ['txt', 'label'],index_col=None, header=-1)
     
-    norm_lrClassifier, norm_vectorizer = trainNormLR()
+    # load the model from disk
+    norm_lrClassifier = pickle.load(open('norm_lrClassifier_model.sav', 'rb'))
+    
+    # Normalisation of text is done here
+    # Loading the saved vectorizer from training
+    norm_vectorizer = pickle.load(open('norm_lr_vectorizer.pk', 'rb'))
     
     y = list(df.label)    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
     x = df.txt    #setting the independent variables of features from text
@@ -202,13 +253,18 @@ def testNormLR(testfile):
     return predict_list, precision, recall, accuracy, f1measure
 
 
-# In[536]:
+# In[76]:
 
 
 def testUnNormLR(testfile):
     df = pd.read_csv(testfile,sep='\t', names = ['txt', 'label'],index_col=None, header=-1)
     
-    unNorm_lrClassifier, unNorm_vectorizer = trainUnNormLR()
+    # load the model from disk
+    unNorm_lrClassifier = pickle.load(open('unNorm_lrClassifier_model.sav', 'rb'))
+    
+    # No Normalisation of text is done here
+    # Loading the saved vectorizer from training
+    unNorm_vectorizer = pickle.load(open('unNorm_lr_vectorizer.pk', 'rb'))
     
     y = list(df.label)    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
     x = df.txt    #setting the independent variables of features from text
@@ -227,7 +283,7 @@ def testUnNormLR(testfile):
     return predict_list, precision, recall, accuracy, f1measure
 
 
-# In[537]:
+# In[77]:
 
 
 def contingencyTable(systemLabels, goldLabels):    # Building a 2 dimensional contingency table
@@ -258,7 +314,7 @@ def contingencyTable(systemLabels, goldLabels):    # Building a 2 dimensional co
     return precision, recall, accuracy, f1measure
 
 
-# In[538]:
+# In[78]:
 
 
 def createResultsFile(classifierType, version, systemLabels, precision, recall, accuracy, f1measure):
@@ -276,7 +332,7 @@ def createResultsFile(classifierType, version, systemLabels, precision, recall, 
     out_file.write("F1-measure: "+ str(f1measure) +"\n")
 
 
-# In[540]:
+# In[79]:
 
 
 if __name__ == '__main__':
@@ -300,4 +356,10 @@ if __name__ == '__main__':
         sys.exit()
         
     createResultsFile(classifier_type, version, predict_list, precision, recall, accuracy, f1measure)
+
+
+# In[ ]:
+
+
+
 
