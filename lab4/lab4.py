@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[63]:
+# In[1]:
 
 
 import pandas as pd
@@ -18,7 +18,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 
 
-# In[64]:
+# In[2]:
 
 
 #reading all the files for training using pandas and concatenating data from all the training files
@@ -26,7 +26,7 @@ all_files = ["imdb_labelled.txt","amazon_cells_labelled.txt","yelp_labelled.txt"
 dataframe = pd.concat(pd.read_csv(file, sep='\t', names = ['txt', 'label'],index_col=None, header=0) for file in all_files)
 
 
-# In[65]:
+# In[3]:
 
 
 def trainNormNB():
@@ -55,13 +55,13 @@ def trainNormNB():
         pickle.dump(norm_vectorizer, fin)
 
 
-# In[66]:
+# In[4]:
 
 
 trainNormNB()
 
 
-# In[67]:
+# In[5]:
 
 
 def trainUnNormNB():
@@ -88,13 +88,13 @@ def trainUnNormNB():
         pickle.dump(unNorm_vectorizer, fin)
 
 
-# In[68]:
+# In[6]:
 
 
 trainUnNormNB()
 
 
-# In[69]:
+# In[7]:
 
 
 def testNormNB(testfile):
@@ -119,12 +119,12 @@ def testNormNB(testfile):
         
         predict_list.append(prediction[0])
     
-    precision, recall, accuracy, f1measure = contingencyTable(predict_list,y)
+    #precision, recall, accuracy, f1measure = contingencyTable(predict_list,y)
     
-    return predict_list, precision, recall, accuracy, f1measure
+    return predict_list
 
 
-# In[70]:
+# In[8]:
 
 
 def testUnNormNB(testfile):
@@ -150,12 +150,12 @@ def testUnNormNB(testfile):
         
         predict_list.append(prediction[0])
     
-    precision, recall, accuracy, f1measure = contingencyTable(predict_list,y)
+    #precision, recall, accuracy, f1measure = contingencyTable(predict_list,y)
     
-    return predict_list, precision, recall, accuracy, f1measure
+    return predict_list
 
 
-# In[71]:
+# In[9]:
 
 
 def trainNormLR():
@@ -184,13 +184,13 @@ def trainNormLR():
         pickle.dump(norm_vectorizer, fin)
 
 
-# In[72]:
+# In[10]:
 
 
 trainNormLR()
 
 
-# In[73]:
+# In[11]:
 
 
 def trainUnNormLR():
@@ -217,13 +217,13 @@ def trainUnNormLR():
         pickle.dump(unNorm_vectorizer, fin)
 
 
-# In[74]:
+# In[12]:
 
 
 trainUnNormLR()
 
 
-# In[75]:
+# In[13]:
 
 
 def testNormLR(testfile):
@@ -248,12 +248,12 @@ def testNormLR(testfile):
         
         predict_list.append(prediction[0])
     
-    precision, recall, accuracy, f1measure = contingencyTable(predict_list,y)
+    #precision, recall, accuracy, f1measure = contingencyTable(predict_list,y)
     
-    return predict_list, precision, recall, accuracy, f1measure
+    return predict_list
 
 
-# In[76]:
+# In[14]:
 
 
 def testUnNormLR(testfile):
@@ -278,12 +278,12 @@ def testUnNormLR(testfile):
         
         predict_list.append(prediction[0])
     
-    precision, recall, accuracy, f1measure = contingencyTable(predict_list,y)
+    #precision, recall, accuracy, f1measure = contingencyTable(predict_list,y)
     
-    return predict_list, precision, recall, accuracy, f1measure
+    return predict_list
 
 
-# In[77]:
+# In[15]:
 
 
 def contingencyTable(systemLabels, goldLabels):    # Building a 2 dimensional contingency table
@@ -314,25 +314,20 @@ def contingencyTable(systemLabels, goldLabels):    # Building a 2 dimensional co
     return precision, recall, accuracy, f1measure
 
 
-# In[78]:
+# In[16]:
 
 
-def createResultsFile(classifierType, version, systemLabels, precision, recall, accuracy, f1measure):
+def createResultsFile(classifierType, version, systemLabels):
     
     out_file = open('results-'+classifierType+'-'+version+'.txt', 'w')
-    out_file.write("System Labels:" + "\n")
+    #out_file.write("System Labels:" + "\n")
     
     for label in systemLabels:
         out_file.write(str(label) + "\n")
     
-    out_file.write("\t"+ '[0.0 - 1.0]' + "\n")  
-    out_file.write("Accuracy: "+ str(accuracy) +"\n")
-    out_file.write("Precision: "+ str(precision) +"\n")
-    out_file.write("Recall: "+ str(recall) +"\n")
-    out_file.write("F1-measure: "+ str(f1measure) +"\n")
 
 
-# In[79]:
+# In[17]:
 
 
 if __name__ == '__main__':
@@ -342,20 +337,20 @@ if __name__ == '__main__':
     testfile = sys.argv[3]
     
     if classifier_type == 'nb' and version == 'n':
-        predict_list, precision, recall, accuracy, f1measure = testNormNB(testfile)
+        predict_list = testNormNB(testfile)
     elif classifier_type == 'nb' and version == 'u':
-        predict_list, precision, recall, accuracy, f1measure = testUnNormNB(testfile)
+        predict_list = testUnNormNB(testfile)
     elif classifier_type == 'lr' and version == 'n':
-        predict_list, precision, recall, accuracy, f1measure = testNormLR(testfile)
+        predict_list = testNormLR(testfile)
     elif classifier_type == 'lr' and version == 'u':
-        predict_list, precision, recall, accuracy, f1measure = testUnNormLR(testfile)
+        predict_list = testUnNormLR(testfile)
     else:
         print("Wrong intput combination. < E.g. “python lab4.py nb u test.txt”" + "\n"
               +"should run the unnormalized version of your naïve bayes classifier" + "\n"
               +" on a file called test.txt.>")
         sys.exit()
         
-    createResultsFile(classifier_type, version, predict_list, precision, recall, accuracy, f1measure)
+    createResultsFile(classifier_type, version, predict_list)
 
 
 # In[ ]:
