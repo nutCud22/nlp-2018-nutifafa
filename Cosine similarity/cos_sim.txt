@@ -1,0 +1,6 @@
+How many teams participated in the first world cup?
+Who holds the record for top scorer in a single World Cup?
+Should I sell my car myself or trade it in?
+How important is car maintenance?
+How much does AWS SAM cost to use
+Which languages does AWS SAM support
