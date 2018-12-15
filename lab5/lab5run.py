@@ -16,6 +16,7 @@ norm_vectorizer = TfidfVectorizer(use_idf=True, lowercase=True, strip_accents='a
 y = dataframe.label    #setting dependent variables, the labels 0 for negative and 1 for positive sentiment
 x = norm_vectorizer.fit_transform(dataframe.txt)    #transforming data in the dataframe to features from text
 
+print(x)
 # Training testing split
 # Using a random state to guarantee the same results whenever training is done
 x_training, x_testing, y_training, y_testing = train_test_split(x, y, random_state=29, train_size = 0.95, test_size = 0.05)
